@@ -428,7 +428,7 @@ def parse_cluster_info(response, **options):
 def _parse_node_line(line):
     line_items = line.split(' ')
     node_id, addr, flags, master_id, ping, pong, epoch, \
-        connected = line.split(' ')[:8]
+    connected = line.split(' ')[:8]
     slots = [sl.split('-') for sl in line_items[8:]]
     node_dict = {
         'node_id': node_id,
@@ -462,7 +462,7 @@ def parse_georadius_generic(response, **options):
     else:
         response_list = response
 
-    if not options['withdist'] and not options['withcoord']\
+    if not options['withdist'] and not options['withcoord'] \
             and not options['withhash']:
         # just a bunch of places
         return response_list
@@ -611,8 +611,8 @@ class Redis(object):
             'DEBUG OBJECT': parse_debug_object,
             'GEOHASH': lambda r: list(map(nativestr_or_none, r)),
             'GEOPOS': lambda r: list(map(lambda ll: (float(ll[0]),
-                                         float(ll[1]))
-                                         if ll is not None else None, r)),
+                                                     float(ll[1]))
+            if ll is not None else None, r)),
             'GEORADIUS': parse_georadius_generic,
             'GEORADIUSBYMEMBER': parse_georadius_generic,
             'HGETALL': lambda r: r and pairs_to_dict(r) or {},
@@ -1159,7 +1159,7 @@ class Redis(object):
             client_types = ('normal', 'master', 'slave', 'pubsub')
             if str(_type).lower() not in client_types:
                 raise DataError("CLIENT KILL type must be one of %r" % (
-                                client_types,))
+                    client_types,))
             args.extend((b'TYPE', _type))
         if skipme is not None:
             if not isinstance(skipme, bool):
@@ -1189,7 +1189,7 @@ class Redis(object):
             client_types = ('normal', 'master', 'replica', 'pubsub')
             if str(_type).lower() not in client_types:
                 raise DataError("CLIENT LIST _type must be one of %r" % (
-                                client_types,))
+                    client_types,))
             return self.execute_command('CLIENT LIST', b'TYPE', _type)
         return self.execute_command('CLIENT LIST')
 
@@ -1579,6 +1579,7 @@ class Redis(object):
     def exists(self, *names):
         "Returns the number of ``names`` that exist"
         return self.execute_command('EXISTS', *names)
+
     __contains__ = exists
 
     def expire(self, name, time):
@@ -3274,7 +3275,7 @@ class Redis(object):
         elif kwargs['unit']:
             pieces.append(kwargs['unit'])
         else:
-            pieces.append('m',)
+            pieces.append('m', )
 
         for arg_name, byte_repr in (
                 ('withdist', b'WITHDIST'),
@@ -3305,6 +3306,28 @@ class Redis(object):
             pieces.extend([b'STOREDIST', kwargs['store_dist']])
 
         return self.execute_command(command, *pieces, **kwargs)
+
+    # Bloom COMMANDS
+    def bfreserve(self, key, error_rate, initial_size):
+        """
+        Creates an empty Bloom Filter with a given desired error ratio and initial capacity.
+        """
+        return self.execute_command("bf.reserve", key, error_rate, initial_size)
+
+    def bfadd(self, key, value):
+
+        return self.execute_command("bf.add", key, value)
+
+    def bfexists(self, key, value):
+
+        return self.execute_command("bf.add", key, value)
+
+    def bfmadd(self, key, value, *values):
+
+        return self.execute_command("bf.madd", key, value, *values)
+
+    def bfmexists(self, key, value, *values):
+        return self.execute_command("bf.mexists", key, value, *values)
 
 
 StrictRedis = Redis
@@ -3874,7 +3897,7 @@ class Pipeline(Redis):
         return self
 
     def _execute_transaction(self, connection, commands, raise_on_error):
-        cmds = chain([(('MULTI', ), {})], commands, [(('EXEC', ), {})])
+        cmds = chain([(('MULTI',), {})], commands, [(('EXEC',), {})])
         all_cmds = connection.pack_commands([args for args, options in cmds
                                              if EMPTY_RESPONSE not in options])
         connection.send_packed_command(all_cmds)
@@ -4077,6 +4100,7 @@ class BitFieldOperation(object):
     """
     Command builder for BITFIELD commands.
     """
+
     def __init__(self, client, key, default_overflow=None):
         self.client = client
         self.key = key
